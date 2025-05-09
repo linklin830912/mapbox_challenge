@@ -1,0 +1,49 @@
+.container{
+    width: 55px;
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    align-items: start;
+    gap: 3px;
+    font-size: 14px;
+    color: white;
+    font-weight:500;
+}
+.toggle-container {
+  max-width: 55px;
+  height: 25px;
+  background-color: #ddd;
+  border-radius: 30px;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 3px;
+  transition: background-color 0.3s ease;
+}
+
+.toggle-container:hover {
+  background-color: #ccc;
+}
+
+.toggle-slider {
+  max-width: 24px;
+  height: 24px;
+  background-color: white;
+  border-radius: 50%;
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  transition: left 0.3s ease;
+}
+
+.toggle-slider.on {
+  left: 33px;
+}
+
+.toggle-label {
+  position: absolute;
+  right: -40px;
+  font-size: 14px;
+  color: #333;
+}

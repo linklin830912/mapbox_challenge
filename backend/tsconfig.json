@@ -1,0 +1,11 @@
+// backend/tsconfig.json
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "outDir": "./dist"
+  },
+  "include": ["src"]
+}

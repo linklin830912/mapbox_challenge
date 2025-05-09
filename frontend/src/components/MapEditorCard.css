@@ -1,0 +1,43 @@
+.editor-container {
+  position: fixed;
+  top: 300px;
+  left: 0;
+  background: rgba(128, 128, 128, 0.501);      
+  color: white;       
+  padding: 15px;         
+  z-index: 100;
+  max-width: 300px;
+}
+.input-container{
+    display: flex;
+    flex-direction: row;
+}
+.input-container div {
+    width: 95%;
+}
+.points-detail-container{
+    font-size: 10px;
+    display: flex;
+    gap: 1px;
+    flex-direction: column;
+}
+.input-col-container{
+    padding: 15px 0; 
+    display: flex;
+    gap: 5px;
+    flex-direction: column;
+}
+.main-button{
+    width: 100%;
+    background-color: black; /* Indigo */
+  color: white;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.25s ease, transform 0.15s ease;
+
+}
