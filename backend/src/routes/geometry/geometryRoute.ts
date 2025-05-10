@@ -10,7 +10,7 @@ geometryRoute.post("/gridinfo", (req: Request, res: Response) => {
     const rotate = req.body.rotate;
     const shiftX = req.body.shiftX;
     const shiftY = req.body.shiftY;
-    const gridinfo = getInitGridInfo(polygon, gridX, gridY, {rotate, shiftX, shiftY});
+    const gridinfo = getInitGridInfo(polygon, gridX, gridY, { rotate, shiftX, shiftY });
     res.json({ gridinfo });
 });
 

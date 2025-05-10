@@ -23,7 +23,7 @@ export function convexHullFromPolygon(points: THREE.Vector2[]): THREE.Vector2[] 
       }
     }
     p = q;
-  } while (p !== leftmost); // until we wrap around
+  } while (p !== leftmost); // util close the polygon
     hull.push(hull[0]);
   return hull;
 }

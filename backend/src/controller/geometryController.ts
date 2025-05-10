@@ -36,7 +36,7 @@ export function getInitGridInfo(
     const { grid, gridPoints, bbx } = gridFromParameters(hull, threePolygon, gridX, gridY, center,
       { rotate: angle, shiftX: extra.shiftX, shiftY: extra.shiftY });
 
-    if (grid.length > maxGridCount) {
+    if (grid.filter(poly=>poly.isValid).length > maxGridCount) {
       maxGridCount = grid.length;
       gridInfo = {
         angle: angle,
@@ -64,7 +64,7 @@ export function adjustGridInfo(gridInfo: AdjustGridInfo, extra: ExtraParameters)
   const gridY = gridInfo.gridY;
 
   const { gridPoints, grid, bbx } = gridFromParameters(hull, threePolygon, gridX, gridY, center
-    , { rotate: angle, shiftX: extra.shiftX, shiftY: extra.shiftY });
+    , {rotate: angle, shiftX: extra.shiftX, shiftY: extra.shiftY });
     return {
           ...gridInfo,
           points: gridPoints as Point[][],

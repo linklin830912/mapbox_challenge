@@ -9,6 +9,6 @@ type GridInfoResponse = {
 export async function getAnalysisGridInfo(
     polygon: Polygon, gridX: number, gridY: number, rotate: number, shiftX: number, shiftY: number,): Promise<GridInfo>{ 
       
-    const response = await api.post<GridInfoResponse>(API_GET_ANALYSIS_GRID_INFO, { polygon, gridX, gridY, rotate, shiftX, shiftY });
+  const response = await api.post<GridInfoResponse>(API_GET_ANALYSIS_GRID_INFO, { polygon, gridX, gridY, rotate, shiftX, shiftY });
     return response.data.gridinfo
 }

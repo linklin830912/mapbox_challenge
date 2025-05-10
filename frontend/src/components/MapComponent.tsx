@@ -15,6 +15,7 @@ import { convertMeterToLongLatitude } from '../utils/geoJson/convertMeterToLongL
 import { AdjustGridInfo, GridInfo } from '../models/GridInfo';
 import { getAdjustGridInfo } from '../api/geometry/getAdjustGridInfo';
 import { convertPointsToGeoJson } from '../utils/geoJson/convertPointsToGeoJson';
+import { convertGridToGeoJson } from '../utils/geoJson/convertGridToGeoJson';
 
 mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_TOKEN;
 
@@ -75,8 +76,10 @@ const MapComponent = () => {
   
   const cleanupGeoJson = useCallback(() => {
    //delete all layers when drawn polygon is deleted
-    const sourceIdGrid = GeoJsonSourceIdEnum.Grid
-        const layerIdGrid = convertGeoJsonSourceIdToLayerId(sourceIdGrid);
+        const sourceIdGridValid = GeoJsonSourceIdEnum.GridValid
+        const layerIdGridValid = convertGeoJsonSourceIdToLayerId(sourceIdGridValid);
+        const sourceIdGridInValid = GeoJsonSourceIdEnum.GridInValid
+        const layerIdGridInValid = convertGeoJsonSourceIdToLayerId(sourceIdGridInValid);
         const sourceIdGridPoint = GeoJsonSourceIdEnum.GridPoints
         const layerIdGridPoint = convertGeoJsonSourceIdToLayerId(sourceIdGridPoint);
         const sourceIdHull = GeoJsonSourceIdEnum.ConvecHull
@@ -85,8 +88,10 @@ const MapComponent = () => {
         const layerIdBbx = convertGeoJsonSourceIdToLayerId(sourceIdBbx);
       
         if (!mapRef) return;
-        if (mapRef.current?.getLayer(layerIdGrid)) mapRef.current.removeLayer(layerIdGrid);    
-        if (mapRef.current?.getSource(sourceIdGrid)) mapRef.current.removeSource(sourceIdGrid);
+        if (mapRef.current?.getLayer(layerIdGridValid)) mapRef.current.removeLayer(layerIdGridValid);    
+        if (mapRef.current?.getSource(sourceIdGridValid)) mapRef.current.removeSource(sourceIdGridValid);
+        if (mapRef.current?.getLayer(layerIdGridInValid)) mapRef.current.removeLayer(layerIdGridInValid);    
+        if (mapRef.current?.getSource(sourceIdGridInValid)) mapRef.current.removeSource(sourceIdGridInValid);
         if (mapRef.current?.getLayer(layerIdGridPoint)) mapRef.current.removeLayer(layerIdGridPoint);    
         if (mapRef.current?.getSource(sourceIdGridPoint)) mapRef.current.removeSource(sourceIdGridPoint);
         if (mapRef.current?.getLayer(layerIdHull)) mapRef.current.removeLayer(layerIdHull);    
@@ -122,13 +127,13 @@ const MapComponent = () => {
     let geoInfo;
     switch (enm) {
       case GeoJsonSourceIdEnum.GridPoints:
-        geoInfo = convertPointsToGeoJson(sourceId, currentGridInfo.points);
+        geoInfo = convertPointsToGeoJson(sourceId, currentGridInfo.points, color);
         break;
       case GeoJsonSourceIdEnum.BoundingBox:
-        geoInfo = convertPolygonsToGeoJson(sourceId, [currentGridInfo.bbx], color);
+        geoInfo = convertPolygonsToGeoJson(sourceId, currentGridInfo.bbx, color);
         break;
       case GeoJsonSourceIdEnum.ConvecHull:
-        geoInfo = convertPolygonsToGeoJson(sourceId, [currentGridInfo.convexHull], color);
+        geoInfo = convertPolygonsToGeoJson(sourceId, currentGridInfo.convexHull, color);
         break;
     }
         
@@ -146,7 +151,8 @@ const MapComponent = () => {
       if (!mapRef.current || !polygon) return;
       
       cleanupGeoJson();
-      const sourceId = GeoJsonSourceIdEnum.Grid;
+    const sourceId0 = GeoJsonSourceIdEnum.GridValid;
+    const sourceId1 = GeoJsonSourceIdEnum.GridInValid;
       // convert meter to long, lat
       const { longtitude, latitude } = convertMeterToLongLatitude(gridX, gridY);
       const { longtitude: shiftLongtitude, latitude: shiftLatitude } = convertMeterToLongLatitude(shiftX, shiftY)
@@ -156,20 +162,23 @@ const MapComponent = () => {
       setCurrentGridInfo(gridInfo);
     const grid = gridInfo.grid;
     // convert data to geoJson
-          const geoInfo = convertPolygonsToGeoJson(sourceId, grid);
+          const geoInfos = convertGridToGeoJson(sourceId0,sourceId1, grid);
       
+      
+    geoInfos.forEach((geoInfo) => {
       if (!mapRef || !mapRef.current) return;
-      
-      mapRef.current.addSource(geoInfo.id, geoInfo.source);    
-      mapRef.current.addLayer(geoInfo.layer);        
-      mapRef.current.moveLayer(geoInfo.layer.id);
+        mapRef.current.addSource(geoInfo.id, geoInfo.source);    
+        mapRef.current.addLayer(geoInfo.layer);        
+        mapRef.current.moveLayer(geoInfo.layer.id);
+    })     
       
     }, [polygon, mapRef])
   
   const adjustGrid = useCallback(async (gridX:number, gridY:number, rotation:number, shiftX:number, shiftY:number) => {
     if (!mapRef.current || !currentGridInfo) return;    
     cleanupGeoJson();   
-    const sourceId = GeoJsonSourceIdEnum.Grid;
+    const sourceId0 = GeoJsonSourceIdEnum.GridValid;
+    const sourceId1 = GeoJsonSourceIdEnum.GridInValid;
     // convert meter to long, lat
     const { longtitude, latitude } = convertMeterToLongLatitude(gridX, gridY);
     const { longtitude: shiftLongtitude, latitude: shiftLatitude } = convertMeterToLongLatitude(shiftX, shiftY);
@@ -187,12 +196,16 @@ const MapComponent = () => {
     setCurrentGridInfo(gridInfo);
     const grid = gridInfo.grid;
     // convert data to geoInfo
-    const geoInfo = convertPolygonsToGeoJson(sourceId  , grid);
+    const geoInfos = convertGridToGeoJson(sourceId0, sourceId1, grid);
     
     if (!mapRef || !mapRef.current) return;
-    mapRef.current.addSource(geoInfo.id, geoInfo.source);    
-    mapRef.current.addLayer(geoInfo.layer);        
-    mapRef.current.moveLayer(geoInfo.layer.id);
+
+    geoInfos.forEach((geoInfo) => {
+      if (!mapRef || !mapRef.current) return;
+        mapRef.current.addSource(geoInfo.id, geoInfo.source);    
+        mapRef.current.addLayer(geoInfo.layer);        
+        mapRef.current.moveLayer(geoInfo.layer.id);
+    })
     
   }, [currentGridInfo, mapRef])
   
@@ -205,9 +218,9 @@ const MapComponent = () => {
         handleParameterChange={(gridX: number, gridY: number, rotation: number, shiftX: number, shiftY: number) => {
           setParameters({gridX, gridY, rotation, shiftX, shiftY})
         }}
-        handleShowBoundingBox={(val) => showGeoElements(GeoJsonSourceIdEnum.BoundingBox, val)} 
-        handleShowConvexHull={(val) => showGeoElements(GeoJsonSourceIdEnum.ConvecHull, val)} 
-        handleShowGridPoints={(val) => showGeoElements(GeoJsonSourceIdEnum.GridPoints, val)} />}
+        handleShowBoundingBox={(val) => showGeoElements(GeoJsonSourceIdEnum.BoundingBox, val, "blue")} 
+        handleShowConvexHull={(val) => showGeoElements(GeoJsonSourceIdEnum.ConvecHull, val, "green")} 
+        handleShowGridPoints={(val) => showGeoElements(GeoJsonSourceIdEnum.GridPoints, val, "red")} />}
     </div>
   );
 };

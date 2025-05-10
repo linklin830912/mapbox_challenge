@@ -1,16 +1,17 @@
 import { mapGridToGeojsonPolygon } from "../../mappers/mapGridToGeojsonPolygon";
+import { mapPolygonToGeojsonPolygon } from "../../mappers/mapPolygonToGeojsonPolygon";
 import { GeoJsonInfo } from "../../models/GeoJsonInfo";
 import { Polygon } from "../../models/Polygon";
 import { convertGeoJsonSourceIdToLayerId } from "./convertGeoJsonSourceIdToLayerId";
 
-export function convertPolygonsToGeoJson(id: string ,polygons: Polygon[], color?:string) {
+export function convertPolygonsToGeoJson(id: string ,polygon: Polygon, color?:string) {
 
   
     const features: GeoJSON.Feature[] = [];
 
   const poly: GeoJSON.Polygon = {
         type: 'Polygon',
-        coordinates: mapGridToGeojsonPolygon(polygons)
+        coordinates: [mapPolygonToGeojsonPolygon(polygon)]
       };
     features.push({ type: 'Feature', geometry: poly, properties: {} })
 

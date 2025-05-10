@@ -1,5 +1,6 @@
 export enum GeoJsonSourceIdEnum { 
-  Grid = "grid",
+  GridValid = "gridValid",
+  GridInValid = "gridnValid",
   ConvecHull = "hull",
   GridPoints = "gridPoints",
   BoundingBox = "boundingBox"

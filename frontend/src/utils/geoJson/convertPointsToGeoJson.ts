@@ -2,7 +2,7 @@ import { GeoJsonInfo } from "../../models/GeoJsonInfo";
 import { Point } from "../../models/Point";
 import { convertGeoJsonSourceIdToLayerId } from "./convertGeoJsonSourceIdToLayerId";
 
-export function convertPointsToGeoJson(id: string ,points: Point[][]) {
+export function convertPointsToGeoJson(id: string ,points: Point[][], color?:string) {
 
     let allPoints: Point[] = [];
     points.forEach(pts => { allPoints = [...allPoints, ...pts] });
@@ -32,8 +32,8 @@ export function convertPointsToGeoJson(id: string ,points: Point[][]) {
           type: 'circle',
           source: id,
           paint: {
-            'circle-radius': ['get', 'radius'],
-            'circle-color': ['get', 'color'],
+            'circle-radius': 5,
+            'circle-color': color ?? "gray",
             'circle-opacity': 0.6
           }
         }
