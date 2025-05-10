@@ -32,7 +32,7 @@ export function convertPointsToGeoJson(id: string ,points: Point[][], color?:str
           type: 'circle',
           source: id,
           paint: {
-            'circle-radius': 5,
+            'circle-radius': 4,
             'circle-color': color ?? "gray",
             'circle-opacity': 0.6
           }

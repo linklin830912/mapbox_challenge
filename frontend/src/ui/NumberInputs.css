@@ -1,21 +1,18 @@
-.input-container {
+.number-input-container {
   width: 100%;  
   display: flex;
   flex-direction: column;
   padding: 5px 0px 3px 0px;
 }
-.input-container label {
+.number-input-container label {
   display: block;
-  margin-bottom: 10px;
-  font-size: 12px;
   color: white;
   font-weight:500;
 }
 
-.input-container input[type="number"] {
+.number-input-container input[type="number"] {
   width: 100%;
   padding: 8px 10px;
-  font-size: 14px;
   margin-top: 4px;
   border: 1px solid #ccc;
   border-radius: 6px;
@@ -23,8 +20,21 @@
   transition: border 0.2s ease, box-shadow 0.2s ease;
 }
 
-.input-container input[type="number"]:focus {
+.number-input-container input[type="number"]:focus {
   border-color: black;
   box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.3);
   outline: none;
+}
+.description-container{
+  font-size: 12px;
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  justify-content: end;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.description-container div{
+  text-align: end;
 }

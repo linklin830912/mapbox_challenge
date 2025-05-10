@@ -5,7 +5,6 @@
     justify-content: left;
     align-items: start;
     gap: 3px;
-    font-size: 14px;
     color: white;
     font-weight:500;
 }
@@ -44,6 +43,5 @@
 .toggle-label {
   position: absolute;
   right: -40px;
-  font-size: 14px;
   color: #333;
 }

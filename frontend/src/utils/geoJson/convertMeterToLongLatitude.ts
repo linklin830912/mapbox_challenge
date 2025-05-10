@@ -11,8 +11,9 @@ export function convertMeterToLongLatitude(x:number, y:number) {
 
     const deltaLat = newLatitude - start[1];
     const deltaLong = newLongtitude - start[0];
+
     return {
-        latitude: Math.abs(deltaLat),
-        longtitude: Math.abs(deltaLong)
+        latitude: x>0 ? Math.abs(deltaLat) : -Math.abs(deltaLat),
+        longtitude:y>0 ? Math.abs(deltaLong) : - Math.abs(deltaLong)
     }
 }

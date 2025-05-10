@@ -3,5 +3,7 @@ export enum GeoJsonSourceIdEnum {
   GridInValid = "gridnValid",
   ConvecHull = "hull",
   GridPoints = "gridPoints",
-  BoundingBox = "boundingBox"
+  BoundingBox = "boundingBox",
+  BoundingBoxArrowX = "boundingBoxArrowX",
+  BoundingBoxArrowY = "boundingBoxArrowY"
 }

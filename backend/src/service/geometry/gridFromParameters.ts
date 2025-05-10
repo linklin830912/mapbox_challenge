@@ -13,9 +13,6 @@ export function gridFromParameters(hull: THREE.Vector2[], polygon: THREE.Vector2
     const rotatedHull = hull.map(p => p.clone().applyMatrix3(totalMatrix));
     const rotatedPolygon = polygon.map(p => p.clone().applyMatrix3(totalMatrix));
 
-    const shiftVector = new THREE.Vector2(extra.shiftX, extra.shiftY);
-    const rotateShiftVector = shiftVector.clone().applyMatrix3(rotationMatrix);
-
     const box = new THREE.Box2();
     rotatedHull.forEach(p => box.expandByPoint(p));
 
@@ -29,7 +26,7 @@ export function gridFromParameters(hull: THREE.Vector2[], polygon: THREE.Vector2
         const row: {point:THREE.Vector2, isValid:boolean}[] = [];
         for (let w = 0; w <= Math.floor(width / gridX); w++) {
             const x = box.min.x + gridX * w;
-            const pt = new THREE.Vector2(x + rotateShiftVector.x, y + rotateShiftVector.y);
+            const pt = new THREE.Vector2(x + extra.shiftX, y + extra.shiftY);
             // check valid points
             row.push({ point: pt, isValid: rayCastingForPointInPolygon(rotatedPolygon, pt) });
             // if all points are in hull, add the polygon
