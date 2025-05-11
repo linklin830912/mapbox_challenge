@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import { Polygon } from '../models/Polygon';
-import { MapEditorCard } from './MapEditorCard';
+import { DEFAULT_PARAMETERS, MapEditorCard } from './MapEditorCard';
 import { convertPolygonsToGeoJson } from '../utils/geoJson/convertPolygonsToGeoJson';
 import { convertGeoJsonSourceIdToLayerId } from '../utils/geoJson/convertGeoJsonSourceIdToLayerId';
 import { GeoJsonSourceIdEnum } from '../utils/enums/geoSourceIdEnum';
@@ -16,19 +16,21 @@ import { convertPointsToGeoJson } from '../utils/geoJson/convertPointsToGeoJson'
 import { convertGridToGeoJson } from '../utils/geoJson/convertGridToGeoJson';
 import { GeoJsonInfo } from '../models/GeoJsonInfo';
 import { convertBbxToArrowGeoJson } from '../utils/geoJson/convertBbxToArrowGeoJson';
+import { GeoJsonDisplayEnum } from '../utils/enums/geoJsonDisplayEnum';
 
 
 mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_TOKEN;
 
 
 const MapComponent = () => {
-  const DEFAULT_PARAMETERS = { gridX: 5, gridY: 5, rotation: 0, shiftX: 0, shiftY: 0 };
+  
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [polygon, setPolygon] = useState<Polygon>();
   const [currentGridInfo, setCurrentGridInfo] = useState<GridInfo>();
-  const [parameters, setParameters] = useState<{ gridX: number, gridY: number, rotation: number, shiftX: number, shiftY: number }>(DEFAULT_PARAMETERS);
+  const [parameters, setParameters] = useState<{ gridX: number, gridY: number, rotate: number, shiftX: number, shiftY: number }>(DEFAULT_PARAMETERS);
   const [resetParameters, setResetParameters] = useState<boolean>(false);
+  const [showGeoDisplayEnums, setShowGeoDisplayEnums] = useState<GeoJsonDisplayEnum[]>([]);
   useEffect(() => {
     // map init setups
     if (!mapContainerRef.current) return;      
@@ -48,20 +50,24 @@ const MapComponent = () => {
       },
       defaultMode: 'draw_polygon'
     } as any);
+
     map.addControl(draw);
     mapRef.current = map;
     map.on('draw.create', (e) => {
-      updatePolygon("create", draw.getAll());      
-    });
-
-    map.on('draw.delete', (e) => {
-      updatePolygon("delete", draw.getAll());
+      setPolygon((draw.getAll().features[0].geometry as any).coordinates[0]
+        .map((coord: [number, number]) => { return { x: coord[0], y: coord[1] } })); 
     });
 
     map.on('draw.update', (e) => {
-      updatePolygon("update", draw.getAll());
+      setPolygon((draw.getAll().features[0].geometry as any).coordinates[0]
+        .map((coord: [number, number]) => { return { x: coord[0], y: coord[1] } })); 
     });
-    
+
+    map.on('draw.delete', (e) => {
+      setPolygon(undefined);
+      setCurrentGridInfo(undefined);
+      setResetParameters(!resetParameters);
+    });
     return () => map.remove();
   }, [mapContainerRef]);
   
@@ -78,7 +84,7 @@ const MapComponent = () => {
       cleanupGeoJson();
     } else { 
       // if polygon was drawn trigger API
-      generateGrid(parameters.gridX, parameters.gridY, parameters.rotation, parameters.shiftX, parameters.shiftY);//default value
+      generateGrid(parameters.gridX, parameters.gridY, parameters.rotate, parameters.shiftX, parameters.shiftY);
     }    
   }, [polygon, mapRef])
   
@@ -90,87 +96,46 @@ const MapComponent = () => {
       if (mapRef.current?.getLayer(layerId)) mapRef.current.removeLayer(layerId);
       if (mapRef.current?.getSource(sourceId)) mapRef.current.removeSource(sourceId);
     })
-    setCurrentGridInfo(undefined);
-    setResetParameters(!resetParameters);
-  },[polygon, mapRef])
+  }, [polygon, mapRef])
   
-  const updatePolygon = useCallback((type: "update" | "delete" | "create", data: any) => {
-    // update the polygon whenever it changes
-      if (data.features.length > 0) {
-        const newPoly = (data.features[0].geometry as any).coordinates[0]
-          .map((coord: [number, number]) => { return { x: coord[0], y: coord[1] } })
-        setPolygon(newPoly);
-      } else if (type === "delete") {
-        setPolygon(undefined)
-      }
-  }, [setPolygon])
-  
-  const showGeoElements = useCallback(async (enm: GeoJsonSourceIdEnum[], isShown: boolean) => {
-    // when one of the toggles is on, convert the polygon/points into geoJson and display it 
+  useEffect(() => {
     if (!mapRef.current || !currentGridInfo) return;
-    
-    const sourceIds = enm;
-    const layerIds = sourceIds.map(sourceId => convertGeoJsonSourceIdToLayerId(sourceId));
-    layerIds.forEach(layerId => {
-      if (mapRef.current && mapRef.current.getLayer(layerId)) mapRef.current.removeLayer(layerId);
-    })
-    sourceIds.forEach(sourceId => {
-      if (mapRef.current && mapRef.current.getSource(sourceId)) mapRef.current.removeSource(sourceId);
-    })
-    
-    if (!isShown) return;
-    
-    // base on different GeoJsonSourceIdEnum decide how and what to convert into GeoJson
-    
-    sourceIds.forEach(sourceId => {
-      let geoInfo;
-      switch (sourceId) {
-        case GeoJsonSourceIdEnum.GridPoints:
-          geoInfo = convertPointsToGeoJson(sourceId, currentGridInfo.points, "red");
+    cleanupGeoJson();
+    let geoInfos: GeoJsonInfo[] = [];
+    showGeoDisplayEnums.forEach((enm) => {      
+      switch (enm) {
+        case GeoJsonDisplayEnum.BoundingBox:
+          geoInfos.push(convertPolygonsToGeoJson(GeoJsonSourceIdEnum.BoundingBox, currentGridInfo.bbx, "gray"));
+          geoInfos.push(convertBbxToArrowGeoJson(GeoJsonSourceIdEnum.BoundingBoxArrowX, currentGridInfo.bbx, "red", true));
+          geoInfos.push(convertBbxToArrowGeoJson(GeoJsonSourceIdEnum.BoundingBoxArrowY, currentGridInfo.bbx, "blue", false));
           break;
-        case GeoJsonSourceIdEnum.BoundingBox:
-          geoInfo = convertPolygonsToGeoJson(sourceId, currentGridInfo.bbx, "gray");
+        case GeoJsonDisplayEnum.ConvexHull:
+          geoInfos.push(convertPolygonsToGeoJson(GeoJsonSourceIdEnum.ConvecHull, currentGridInfo.convexHull, "green"));
           break;
-        case GeoJsonSourceIdEnum.ConvecHull:
-          geoInfo = convertPolygonsToGeoJson(sourceId, currentGridInfo.convexHull, "green");
-          break;
-        case GeoJsonSourceIdEnum.BoundingBoxArrowX:
-          geoInfo = convertBbxToArrowGeoJson(sourceId, currentGridInfo.bbx, "red", true);
-          break;
-        case GeoJsonSourceIdEnum.BoundingBoxArrowY:
-          geoInfo = convertBbxToArrowGeoJson(sourceId, currentGridInfo.bbx, "blue", false);
-          break;
+        case GeoJsonDisplayEnum.GridPoints:
+          geoInfos.push(convertPointsToGeoJson(GeoJsonSourceIdEnum.GridPoints, currentGridInfo.points, "red"));
+            break;        
       }
-      addGeoJsonToMap(geoInfo);
     })
-        
-  }, [polygon, mapRef, currentGridInfo])
+    const sourceId0 = GeoJsonSourceIdEnum.GridValid;
+    const sourceId1 = GeoJsonSourceIdEnum.GridInValid;
+    geoInfos = [...geoInfos, ...convertGridToGeoJson(sourceId0, sourceId1, currentGridInfo.grid)];
+    geoInfos.forEach((geoInfo)=>addGeoJsonToMap(geoInfo));        
+  }, [mapRef, showGeoDisplayEnums, currentGridInfo])
     
   const generateGrid = useCallback(async (gridX: number, gridY: number, rotation: number, shiftX: number, shiftY: number) => {
     // call API to initialize the grid after polygon was drawn
     if (!mapRef.current || !polygon) return;    
-    cleanupGeoJson();
-    
     try {
       // call API to get gridInfo
       const gridInfo = await getAnalysisGridInfo(polygon, gridX, gridY, rotation, shiftX, shiftY);
-      console.log(gridInfo  )
-      setCurrentGridInfo(gridInfo);
-      const grid = gridInfo.grid;
-      // convert data to geoJson
-      const sourceId0 = GeoJsonSourceIdEnum.GridValid;
-      const sourceId1 = GeoJsonSourceIdEnum.GridInValid;
-      const geoInfos = convertGridToGeoJson(sourceId0, sourceId1, grid);
-      
-      geoInfos.forEach((geoInfo) => { addGeoJsonToMap(geoInfo); })    
+      setCurrentGridInfo(gridInfo);  
     }catch(err){console.log(err)}
     }, [polygon, mapRef])
   
   const adjustGrid = useCallback(async (gridX:number, gridY:number, rotation:number, shiftX:number, shiftY:number) => {
-    if (!mapRef.current || !currentGridInfo) return;    
-    cleanupGeoJson();
-    // convert meter to long, lat
-    
+    if (!mapRef.current || !currentGridInfo) return;
+    // convert meter to long, lat    
     // due to payload overload simplfy gridInfo
     const adjustGridInfo = {
       convexHull: currentGridInfo.convexHull,
@@ -180,21 +145,11 @@ const MapComponent = () => {
       gridX,
       gridY
     } as AdjustGridInfo;
-
     try {
       // call adjustment api
       const gridInfo = await getAdjustGridInfo(adjustGridInfo, rotation, shiftX, shiftY);
       setCurrentGridInfo(gridInfo);
-      const grid = gridInfo.grid;
-      // convert data to geoInfo
-      const sourceId0 = GeoJsonSourceIdEnum.GridValid;
-      const sourceId1 = GeoJsonSourceIdEnum.GridInValid;
-      const geoInfos = convertGridToGeoJson(sourceId0, sourceId1, grid);
-
-      if (!mapRef || !mapRef.current) return;
-      geoInfos.forEach((geoInfo) => { addGeoJsonToMap(geoInfo) });
-    } catch (err) { console.log(err) }
-    
+    } catch (err) { console.log(err) }    
   }, [currentGridInfo, mapRef])
   
 
@@ -204,12 +159,11 @@ const MapComponent = () => {
       {mapRef && <MapEditorCard polygon={polygon} mapRef={mapRef}
         adjustGrid={adjustGrid}
         resetParameters={resetParameters}
-        handleParameterChange={(gridX: number, gridY: number, rotation: number, shiftX: number, shiftY: number) => {
-          setParameters({gridX, gridY, rotation, shiftX, shiftY})
-        }}
-        handleShowBoundingBox={(val) => showGeoElements([GeoJsonSourceIdEnum.BoundingBox, GeoJsonSourceIdEnum.BoundingBoxArrowX, GeoJsonSourceIdEnum.BoundingBoxArrowY], val)} 
-        handleShowConvexHull={(val) => showGeoElements([GeoJsonSourceIdEnum.ConvecHull], val)} 
-        handleShowGridPoints={(val) => showGeoElements([GeoJsonSourceIdEnum.GridPoints], val)} />}
+        handleParameterChange={({gridX, gridY, rotate, shiftX, shiftY}) => {
+          setParameters({gridX, gridY, rotate, shiftX, shiftY})}}
+        displayGeoJsons={showGeoDisplayEnums}
+        handleShowGeoJson={(enums)=>setShowGeoDisplayEnums(enums)}
+      />}
     </div>
   );
 };

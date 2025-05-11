@@ -10,7 +10,7 @@ type GridInfoResponse = {
 export async function getAnalysisGridInfo(
   polygon: Polygon, gridX: number, gridY: number, rotate: number, shiftX: number, shiftY: number,): Promise<GridInfo>{
   //convert meters to long, lat
-  const { longtitude:gridLong, latitude:gridLat } = convertMeterToLongLatitude(gridX, gridY);
+  const { longtitude: gridLong, latitude: gridLat } = convertMeterToLongLatitude(gridX, gridY);
   const { longtitude: shiftLongtitude, latitude: shiftLatitude } = convertMeterToLongLatitude(shiftX, shiftY);
   const response = await api.post<GridInfoResponse>(API_GET_ANALYSIS_GRID_INFO, { polygon: polygon, gridX: gridLat, gridY: gridLong, rotate: rotate, shiftX: shiftLatitude, shiftY: shiftLongtitude });
 

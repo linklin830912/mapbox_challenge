@@ -77,3 +77,25 @@
     color: white;
     border-radius: 0.5rem;
 }
+.shift-x-container, .shift-y-container{
+    position: relative;
+}
+.shift-x-container::before, .shift-y-container::before {
+    content: "";
+    position: absolute;
+    top: 14px;
+    left: -10px;
+    display: flex;
+    flex-direction: row;
+    width: 5px;   
+    height: 5px;
+    background-color: red;
+    border-radius: 50%;  
+    
+  }
+
+
+.shift-y-container::before {
+    background-color: blue;
+    
+  }

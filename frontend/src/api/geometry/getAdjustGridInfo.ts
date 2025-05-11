@@ -10,6 +10,6 @@ export async function getAdjustGridInfo(gridinfo: AdjustGridInfo, rotate: number
     const { longtitude, latitude } = convertMeterToLongLatitude(gridinfo.gridX, gridinfo.gridY);
   const { longtitude: shiftLongtitude, latitude: shiftLatitude } = convertMeterToLongLatitude(shiftX, shiftY);
   const longlatGridinfo = {...gridinfo, gridX: latitude, gridY:longtitude} as GridInfo
-    const response = await api.post<GridInfoResponse>(API_GET_ADJUST_GRID_INFO ,{ gridinfo: longlatGridinfo, rotate:rotate, shiftX:shiftLongtitude, shiftY:shiftLatitude });
+    const response = await api.post<GridInfoResponse>(API_GET_ADJUST_GRID_INFO ,{ gridinfo: longlatGridinfo, rotate:rotate, shiftX:shiftLatitude, shiftY:shiftLongtitude });
     return response.data.gridinfo
 }
